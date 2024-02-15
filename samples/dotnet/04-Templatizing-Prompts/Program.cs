@@ -126,15 +126,6 @@ while (true)
         }
     );
 
-    // Get chat response for the third agent
-    var chatResult2 = kernel2.InvokeStreamingAsync<StreamingChatMessageContent>(
-        chat2,
-        new() {
-            { "request", request },
-            { "history", string.Join("\n", history.Select(x => x.Role + ": " + x.Content)) }
-        }
-    );
-
     // Stream the response
     string message = "";
     await foreach (var chunk in chatResult)
@@ -144,6 +135,19 @@ while (true)
         Console.Write(chunk);
     }
     Console.WriteLine();
+
+    // Append to history
+    history.AddUserMessage(request!);
+    history.AddAssistantMessage(message);
+
+    // Get chat response for the third agent, using the second agent's response as the request
+    var chatResult2 = kernel2.InvokeStreamingAsync<StreamingChatMessageContent>(
+        chat2,
+        new() {
+            { "request", message },
+            { "history", string.Join("\n", history.Select(x => x.Role + ": " + x.Content)) }
+        }
+    );
 
     // Stream the response for the third agent
     string message2 = "";
@@ -155,8 +159,6 @@ while (true)
     }
     Console.WriteLine();
 
-    // Append to history
-    history.AddUserMessage(request!);
-    history.AddAssistantMessage(message);
-    history.AddAssistantMessage(message2); // Add the third agent's message to the history
+    // Append the third agent's message to the history
+    history.AddAssistantMessage(message2);
 }
