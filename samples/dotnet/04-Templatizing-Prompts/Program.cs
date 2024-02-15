@@ -75,7 +75,22 @@ var getIntent = kernel.CreateFunctionFromPrompt(
 var chat = kernel.CreateFunctionFromPrompt(
     @"{{$history}}
     User: {{$request}}
-    Assistant: "
+    Assistant1: "
+);
+
+// Start the chat loop
+// Create another kernel for the third agent
+var builder2 = Kernel.CreateBuilder();
+builder2.WithCompletionService();
+builder2.Services.AddLogging(c => c.AddDebug().SetMinimumLevel(LogLevel.Trace));
+
+var kernel2 = builder2.Build();
+
+// Create a Semantic Kernel template for chat for the third agent
+var chat2 = kernel2.CreateFunctionFromPrompt(
+    @"{{$history}}
+    User: {{$request}}
+    Assistant2: "
 );
 
 // Start the chat loop
@@ -111,6 +126,15 @@ while (true)
         }
     );
 
+    // Get chat response for the third agent
+    var chatResult2 = kernel2.InvokeStreamingAsync<StreamingChatMessageContent>(
+        chat2,
+        new() {
+            { "request", request },
+            { "history", string.Join("\n", history.Select(x => x.Role + ": " + x.Content)) }
+        }
+    );
+
     // Stream the response
     string message = "";
     await foreach (var chunk in chatResult)
@@ -121,7 +145,18 @@ while (true)
     }
     Console.WriteLine();
 
+    // Stream the response for the third agent
+    string message2 = "";
+    await foreach (var chunk in chatResult2)
+    {
+        if (chunk.Role.HasValue) Console.Write(chunk.Role + " > ");
+        message2 += chunk;
+        Console.Write(chunk);
+    }
+    Console.WriteLine();
+
     // Append to history
     history.AddUserMessage(request!);
     history.AddAssistantMessage(message);
+    history.AddAssistantMessage(message2); // Add the third agent's message to the history
 }
