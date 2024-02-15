@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
-
+// Ich möchte eine Mail an Arne schicken damit er den Kunden informiert das wir dabei sind die Speicherverwaltung des PDF Writers zu optimieren und dabei vorankommen
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
